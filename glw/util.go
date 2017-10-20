@@ -43,17 +43,8 @@ func printVersion() {
 	gl.GetIntegerv(gl.MINOR_VERSION, &minor)
 	vendor := gl.GoStr(gl.GetString(gl.VENDOR))
 	shaderLevel := gl.GoStr(gl.GetString(gl.SHADING_LANGUAGE_VERSION))
-	exts := gl.GoStr(gl.GetString(gl.EXTENSIONS))
 
 	log.Printf("OpenGL version %d.%d (%s) with GLSL %s", major, minor, vendor, shaderLevel)
-	if exts != "" {
-		log.Println("Available OpenGL extensions:", strings.Replace(exts, " ", ", ", -1))
-	} else {
-		log.Println("No OpenGL extensions in environment.")
-	}
-
-	/*version := gl.GoStr(gl.GetString(gl.VERSION))
-	log.Println("OpenGL version", version)*/
 }
 
 // CompileShader gets the shader in the given file (relative to the project root), compiles it with OpenGL and returns
@@ -98,5 +89,22 @@ func getShaderSrcFile(fname string) (string, error) {
 	} else {
 		// Don't forget your null-termination every morning, Dr OpenGL says so.
 		return string(fContents) + "\x00", nil
+	}
+}
+
+func DumpErrors() int {
+	count := 0
+	errCode := gl.GetError()
+	for errCode != gl.NO_ERROR {
+		count +=1
+		log.Printf("[BUG] OpenGL Error: %X\n", errCode)
+		errCode = gl.GetError()
+	}
+	return count
+}
+
+func FatalDumpErrors() {
+	if DumpErrors() != 0 {
+		panic("OpenGL errors occured.")
 	}
 }
